@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Syllabus-based Generator{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-4">
+        <h2 class="card-title mb-3">
+            <i class="bi bi-journal-medical"></i> Syllabus-based AI Generator
+        </h2>
+        <p class="text-muted">Paste the official unit syllabus. The AI will generate JNTUK-style question pairs (a,b) classified by Bloom's levels.</p>
+
+        <form action="{{ url_for('questions.syllabus_generator') }}" method="POST">
+            <div class="mb-3">
+                <label for="subject_id" class="form-label">Subject</label>
+                <select class="form-select" id="subject_id" name="subject_id" required>
+                    <option value="" disabled selected>-- Choose a Subject --</option>
+                    {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.branch_name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="unit_number" class="form-label">Unit Number</label>
+                    <input type="number" min="1" max="5" class="form-control" id="unit_number" name="unit_number" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="num_pairs" class="form-label">Number of Question Pairs</label>
+                    <input type="number" min="1" max="10" class="form-control" id="num_pairs" name="num_pairs" value="5">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="syllabus_text" class="form-label">Unit Syllabus</label>
+                <textarea class="form-control" id="syllabus_text" name="syllabus_text" rows="10" placeholder="Paste the official syllabus text for this unit..." required></textarea>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-robot"></i> Generate and Stage
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

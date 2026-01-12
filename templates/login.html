@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - QPG{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        <div class="card login-card shadow-lg auth-switch-card">
+            <div class="card-body p-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="auth-toggle">
+                        <button type="button" id="login-toggle" class="btn auth-toggle-btn auth-toggle-active">Login</button>
+                        <button type="button" id="register-toggle" class="btn auth-toggle-btn">Register</button>
+                    </div>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">Home</a>
+                </div>
+
+                <div id="error-message" class="alert alert-danger d-none" role="alert"></div>
+
+                <div class="auth-forms-wrapper">
+                    <form id="login-form" class="auth-form auth-form-active">
+                        <h1 class="card-title text-center mb-4">Admin Login</h1>
+                        <div class="form-wave">
+                            <input type="email" class="form-control" id="email" required>
+                            <label>Email address</label>
+                        </div>
+                        <div class="form-wave">
+                            <input type="password" class="form-control" id="password" required>
+                            <label>Password</label>
+                        </div>
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+
+                    <form id="register-form" class="auth-form">
+                        <h2 class="card-title text-center mb-4">Admin Registration</h2>
+                        <div class="form-wave">
+                            <input type="text" class="form-control" id="reg-full-name" required>
+                            <label>Full Name</label>
+                        </div>
+                        <div class="form-wave">
+                            <input type="text" class="form-control" id="reg-designation" required>
+                            <label>Designation</label>
+                        </div>
+                        <div class="form-wave">
+                            <input type="email" class="form-control" id="reg-email" required>
+                            <label>Email address</label>
+                        </div>
+                        <div class="form-wave">
+                            <input type="password" class="form-control" id="reg-password" required>
+                            <label>Password</label>
+                        </div>
+                        <div class="form-wave">
+                            <input type="password" class="form-control" id="reg-confirm-password" required>
+                            <label>Confirm Password</label>
+                        </div>
+                        <div class="mb-3 mt-3">
+                            <label for="reg-faculty-id-card" class="form-label">Faculty ID Card (for verification)</label>
+                            <input type="file" class="form-control" id="reg-faculty-id-card" accept=".jpg,.jpeg,.png,.pdf" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-outline-secondary">Create Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}

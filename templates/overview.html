@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Overview - Intelligent EXAM Generation{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        <div class="card overview-card shadow-lg">
+            <img src="https://placehold.co/600x300/007bff/white?text=Intelligent+Exam+Generation" class="card-img-top" alt="AI in Exams">
+            <div class="card-body p-5">
+                <h1 class="card-title text-center mb-4">Intelligent EXAM Generation</h1>
+                <p class="text-center text-muted mb-5">
+                    Welcome to the future of examination management. This system leverages AI to automate the creation of university-level question papers, secured by blockchain technology.
+                </p>
+                <div class="d-grid gap-3 mb-4">
+                    <a href="{{ url_for('admin.login') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-shield-lock"></i> Admin Login
+                    </a>
+                </div>
+
+                <hr>
+
+                <h3 class="text-center mt-4 mb-3">Student Section</h3>
+                <p class="text-center text-muted mb-4">Download previously generated papers and admin uploaded papers.</p>
+                <div class="d-grid gap-2 mb-4">
+                    <a href="{{ url_for('student.papers') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-mortarboard"></i> Open Student Dashboard
+                    </a>
+                </div>
+
+                <p class="text-center text-muted">Access all previous papers from the Student Dashboard.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

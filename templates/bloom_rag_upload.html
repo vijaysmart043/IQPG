@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Bloom's Taxonomy RAG Question Generator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm upload-card">
+        <div class="card-body p-4">
+            <h2 class="card-title text-center mb-4">
+                <i class="bi bi-book"></i> Bloom's Taxonomy RAG Question Generator
+            </h2>
+            <p class="text-center text-muted mb-4">
+                Upload a PDF and select a Bloom's Taxonomy level. The AI will generate questions aligned with your selected cognitive level.
+            </p>
+
+            <form action="{{ url_for('uploader.bloom_rag_upload') }}" method="POST" enctype="multipart/form-data" id="bloom-rag-form">
+                <div class="mb-3">
+                    <label for="subject_id" class="form-label">1. Select Subject</label>
+                    <select class="form-select" id="subject_id" name="subject_id" required>
+                        <option value="" disabled selected>-- Choose a Subject --</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.branch_name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="bloom_level" class="form-label">2. Select Bloom's Taxonomy Level</label>
+                    <select class="form-select" id="bloom_level" name="bloom_level" required>
+                        <option value="" disabled selected>-- Choose a Level --</option>
+                        {% for level in bloom_levels %}
+                            <option value="{{ level }}" {% if selected_bloom_level == level %}selected{% endif %}>{{ level }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">
+                        <strong>Levels:</strong> Remember (recall facts) → Understand (explain concepts) → Apply (use knowledge) → Analyze (examine relationships) → Evaluate (judge/critique) → Create (produce new work)
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="pdf_file" class="form-label">3. Upload PDF Notes</label>
+                    <input class="form-control" type="file" id="pdf_file" name="pdf_file" accept=".pdf" required>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <button type="submit" class="btn btn-primary btn-lg" id="upload-btn" formaction="{{ url_for('uploader.bloom_rag_upload') }}">
+                        <i class="bi bi-upload"></i> Upload Notes (Descriptive)
+                    </button>
+                    <button type="submit" class="btn btn-success btn-lg" id="mcq-btn" formaction="{{ url_for('uploader.bloom_rag_mcq_generate') }}">
+                        <i class="bi bi-list-check"></i> MCQ Generator
+                    </button>
+                </div>
+            </form>
+
+            <div id="loading-spinner" class="text-center mt-4 d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-primary"><strong>Processing...</strong> Please wait, this may take a few minutes.</p>
+                <p class="text-muted">The AI is extracting text and generating Bloom-aligned questions.</p>
+                <div class="progress mt-3" id="progress-container" style="height: 25px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="progress-bar" role="progressbar" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if extracted_text %}
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#extractedTextCollapse">
+                    <i class="bi bi-file-text"></i> View Extracted Text ({{ total_chunks }} chunks)
+                </button>
+            </h5>
+        </div>
+        <div id="extractedTextCollapse" class="collapse">
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap;">{{ extracted_text }}</pre>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if generated_questions %}
+    <div class="card shadow-sm mt-4 generated-card">
+        <div class="card-body p-4">
+            <h3 class="card-title text-center mb-4">
+                <i class="bi bi-check-circle-fill text-success"></i> Generated Descriptive Questions
+            </h3>
+            <p class="text-center text-muted mb-4">
+                Generated {{ generated_questions|length }} question(s) at <strong>{{ selected_bloom_level }}</strong> level. Questions have been saved to staging.
+            </p>
+
+            {% for question in generated_questions %}
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-question-circle"></i> {{ question.chunk_index + 1 }}a) Question from Unit {{ question.chunk_index + 1 }}</span>
+                    <span class="badge bg-light text-dark">{{ question.bloom_level }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3 question-text fs-5">{{ question.question }}</p>
+                    <hr>
+                    <details>
+                        <summary class="text-muted small">View source chunk excerpt</summary>
+                        <p class="mt-2 small text-muted">{{ question.chunk_text }}</p>
+                    </details>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('questions.staging') }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-right-circle"></i> Go to Staging Area for Full Review
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if generated_mcqs %}
+    <div class="card shadow-sm mt-4 generated-card">
+        <div class="card-body p-4">
+            <h3 class="card-title text-center mb-4">
+                <i class="bi bi-list-check text-success"></i> Generated MCQs (Staged)
+            </h3>
+            <p class="text-center text-muted mb-4">
+                Generated {{ generated_mcqs|length }} MCQ(s) at <strong>{{ selected_bloom_level }}</strong> level. MCQs have been saved to staging.
+            </p>
+
+            {% if mcq_staging %}
+            {% for unit_num, mcqs in mcq_staging.items() %}
+            <div class="mb-4">
+                <h5 class="text-primary mb-3"><i class="bi bi-folder"></i> Unit {{ unit_num }}</h5>
+                {% for mcq in mcqs %}
+                <div class="card mb-3 border-success">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-question-circle"></i> {{ mcq.question_id }}) MCQ</span>
+                        <span class="badge bg-light text-dark">{{ mcq.bloom_level }}</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3 question-text fs-5"><strong>{{ mcq.question }}</strong></p>
+                        <div class="row mt-3">
+                            {% for opt_key, opt_value in mcq.options.items() %}
+                            <div class="col-md-6 mb-2">
+                                <div class="border p-2 rounded {% if opt_key == mcq.correct_answer %}bg-success text-white{% else %}bg-light{% endif %}">
+                                    <strong>{{ opt_key }})</strong> {{ opt_value }}
+                                    {% if opt_key == mcq.correct_answer %}
+                                    <span class="badge bg-warning text-dark ms-2">Correct</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <hr>
+                        <details>
+                            <summary class="text-muted small">View source chunk excerpt</summary>
+                            <p class="mt-2 small text-muted">{{ mcq.chunk_text }}</p>
+                        </details>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            {% else %}
+            {% for mcq in generated_mcqs %}
+            <div class="card mb-3 border-success">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-question-circle"></i> {{ mcq.question_id }}) MCQ from Unit {{ mcq.unit_number }}</span>
+                    <span class="badge bg-light text-dark">{{ mcq.bloom_level }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3 question-text fs-5"><strong>{{ mcq.question }}</strong></p>
+                    <div class="row mt-3">
+                        {% for opt_key, opt_value in mcq.options.items() %}
+                        <div class="col-md-6 mb-2">
+                            <div class="border p-2 rounded {% if opt_key == mcq.correct_answer %}bg-success text-white{% else %}bg-light{% endif %}">
+                                <strong>{{ opt_key }})</strong> {{ opt_value }}
+                                {% if opt_key == mcq.correct_answer %}
+                                <span class="badge bg-warning text-dark ms-2">Correct</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <details>
+                        <summary class="text-muted small">View source chunk excerpt</summary>
+                        <p class="mt-2 small text-muted">{{ mcq.chunk_text }}</p>
+                    </details>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('questions.staging') }}" class="btn btn-success">
+                    <i class="bi bi-arrow-right-circle"></i> Go to Staging Area for Full Review
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if errors %}
+    <div class="card shadow-sm mt-4 border-warning">
+        <div class="card-body p-4">
+            <h3 class="card-title text-center mb-4 text-warning">
+                <i class="bi bi-exclamation-triangle"></i> Generation Errors
+            </h3>
+            <p class="text-center text-muted mb-4">
+                {{ errors|length }} chunk(s) failed to generate questions. Processing continued for other chunks.
+            </p>
+
+            {% for error in errors %}
+            <div class="alert alert-warning" role="alert">
+                <strong>Chunk {{ error.chunk_index + 1 }}:</strong> {{ error.error }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const bloomRagForm = document.getElementById('bloom-rag-form');
+    if (bloomRagForm) {
+        bloomRagForm.addEventListener('submit', function(e) {
+            const spinner = document.getElementById('loading-spinner');
+            const uploadBtn = document.getElementById('upload-btn');
+            const mcqBtn = document.getElementById('mcq-btn');
+            const submitter = e.submitter;
+            
+            if (spinner) {
+                spinner.classList.remove('d-none');
+            }
+            
+            // Disable both buttons
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+            }
+            if (mcqBtn) {
+                mcqBtn.disabled = true;
+            }
+            
+            // Update the clicked button's text
+            if (submitter && submitter.id === 'mcq-btn') {
+                submitter.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating MCQs...';
+            } else if (submitter) {
+                submitter.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            }
+        });
+    }
+</script>
+{% endblock %}

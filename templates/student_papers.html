@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Previous Year Question Papers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="bi bi-collection"></i> Student Dashboard
+    </h2>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Admin Uploaded Question Papers</h5>
+            </div>
+            {% if papers_by_subject %}
+            <ul class="list-group list-group-flush">
+                {% for subject, papers in papers_by_subject.items() %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">{{ subject }}</span>
+                        <div class="btn-group">
+                            {% for paper in papers %}
+                            <a href="{{ paper.download_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                            <a href="{{ paper.download_url }}" download class="btn btn-sm btn-outline-primary">Download</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="alert alert-info m-3">
+                No question papers have been uploaded yet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Previously Generated Papers</h5>
+            </div>
+            {% if generated_by_subject %}
+            {% for subject, items in generated_by_subject.items() %}
+            <div class="card-body pt-2">
+                <h6 class="fw-semibold mb-2">{{ subject }}</h6>
+                <ul class="list-group list-group-flush">
+                    {% for g in items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ g.exam_session or 'Generated Paper' }}</span>
+                        <div class="btn-group">
+                            <a href="{{ g.download_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                            <a href="{{ g.download_url }}" download class="btn btn-sm btn-outline-success">Download</a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert alert-info m-3">
+                No generated papers available yet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+firebase-admin==6.5.0
+Flask==3.0.3
+openai==1.35.13
+pdfminer.six==20240706
+reportlab==4.2.0
+python-dotenv==1.0.1
+scikit-fuzzy==0.4.2
+gunicorn==22.0.0
+setuptools>=65.5.1
+google-generativeai==0.8.3
+PyMuPDF==1.26.4
+pypdf>=4.0.0
+cohere>=5.0.0
+pinecone>=3.0.0

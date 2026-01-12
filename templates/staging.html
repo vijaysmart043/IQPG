@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Staging Area - Review Questions{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-center">
+    <i class="bi bi-clipboard2-check"></i> Review AI-Generated Questions
+</h2>
+
+{% if questions %}
+    {% for question in questions %}
+    <div class="card mb-3 {% if question.is_mcq %}border-success{% endif %}">
+        <div class="card-header d-flex justify-content-between align-items-center {% if question.is_mcq %}bg-success text-white{% endif %}">
+            <span>
+                {% if question.question_id %}
+                <strong>{{ question.question_id }})</strong> |
+                {% endif %}
+                <strong>Subject:</strong> {{ question.subject_name|default('N/A', true) }} | <strong>Bloom's Level:</strong> L{{ question.bloom_level|default('1', true) }}
+                {% if question.is_mcq %}<span class="badge bg-warning text-dark ms-2">MCQ</span>{% endif %}
+            </span>
+            <span class="badge {% if question.is_mcq %}bg-light text-success{% else %}bg-secondary{% endif %}">Staged</span>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('questions.handle_staging_action', question_id=question.id) }}" method="POST">
+                {% if question.is_mcq %}
+                <div class="mb-3">
+                    <label class="form-label"><strong>MCQ Question:</strong></label>
+                    <textarea class="form-control" name="sub_a" id="sub_a_{{ question.id }}" rows="2">{{ question.sub_a or question.question or '' }}</textarea>
+                </div>
+                {% if question.options and question.options is mapping %}
+                <div class="mb-3">
+                    <label class="form-label"><strong>Options:</strong></label>
+                    <div class="row g-2">
+                        {% for opt_key in ['A', 'B', 'C', 'D'] %}
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text {% if opt_key == question.correct_answer %}bg-success text-white{% endif %}">{{ opt_key }}</span>
+                                <input type="text" class="form-control" name="option_{{ opt_key }}" value="{{ question.options.get(opt_key, '') }}">
+                                {% if opt_key == question.correct_answer %}
+                                <span class="input-group-text bg-success text-white"><i class="bi bi-check"></i></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="mb-3">
+                    <label class="form-label"><strong>Correct Answer:</strong></label>
+                    <select class="form-select" name="correct_answer" style="width: auto;">
+                        <option value="A" {% if question.correct_answer == 'A' %}selected{% endif %}>A</option>
+                        <option value="B" {% if question.correct_answer == 'B' %}selected{% endif %}>B</option>
+                        <option value="C" {% if question.correct_answer == 'C' %}selected{% endif %}>C</option>
+                        <option value="D" {% if question.correct_answer == 'D' %}selected{% endif %}>D</option>
+                    </select>
+                </div>
+                <input type="hidden" name="is_mcq" value="true">
+                {% else %}
+                <div class="mb-3">
+                    <label class="form-label"><strong>Question:</strong></label>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="sub_a_{{ question.id }}" class="form-label">a)</label>
+                            <textarea class="form-control" name="sub_a" id="sub_a_{{ question.id }}" rows="3">{{ question.sub_a or question.question or '' }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sub_b_{{ question.id }}" class="form-label">b)</label>
+                            <textarea class="form-control" name="sub_b" id="sub_b_{{ question.id }}" rows="3">{{ question.sub_b or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="bloom_level_{{ question.id }}" class="form-label">Bloom Level</label>
+                        <select class="form-select" id="bloom_level_{{ question.id }}" name="bloom_level">
+                            {% set lvl = (question.bloom_level|default('1', true)|string) %}
+                            <option value="L1" {% if lvl in ['L1','1'] %}selected{% endif %}>L1</option>
+                            <option value="L2" {% if lvl in ['L2','2'] %}selected{% endif %}>L2</option>
+                            <option value="L3" {% if lvl in ['L3','3'] %}selected{% endif %}>L3</option>
+                            <option value="L4" {% if lvl in ['L4','4'] %}selected{% endif %}>L4</option>
+                            <option value="L5" {% if lvl in ['L5','5'] %}selected{% endif %}>L5</option>
+                            <option value="L6" {% if lvl in ['L6','6'] %}selected{% endif %}>L6</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="unit_{{ question.id }}" class="form-label">Unit</label>
+                        <input type="number" min="1" max="5" class="form-control" id="unit_{{ question.id }}" name="unit" value="{{ question.unit|default(1, true) }}">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" name="action" value="remove" class="btn btn-danger me-2">
+                        <i class="bi bi-trash"></i> Remove
+                    </button>
+                    <button type="submit" name="action" value="add" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Add to Syllabus
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info text-center" role="alert">
+        <h4 class="alert-heading">The Staging Area is Empty!</h4>
+        <p>There are no new AI-generated questions to review right now.</p>
+        <hr>
+        <p class="mb-0">Go to the <a href="{{ url_for('uploader.bloom_rag_upload') }}" class="alert-link">Bloom RAG Generator</a> page to generate descriptive questions or MCQs.</p>
+    </div>
+{% endif %}
+{% endblock %}

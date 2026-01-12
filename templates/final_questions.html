@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Final Questions{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-center">
+    <i class="bi bi-check-all"></i> Final Questions
+</h2>
+
+{% if questions_by_subject %}
+    {% for subject_id, subject_data in questions_by_subject.items() %}
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{{ subject_data.name }}</h5>
+            <a href="{{ url_for('generator.generate_final_paper_pdf', subject_id=subject_id) }}" class="btn btn-primary">
+                <i class="bi bi-file-earmark-pdf"></i> Generate PDF
+            </a>
+        </div>
+        <div class="card-body">
+            {% for question in subject_data.questions %}
+            <div class="border p-3 mb-3 rounded" style="border-color: rgba(0, 0, 0, 0.1) !important;">
+                <p class="question-text"><strong>Question:</strong> {{ question.question or (question.sub_a ~ ' ' ~ question.sub_b) }}</p>
+                <p class="mb-0"><strong>Bloom's Level:</strong> L{{ question.bloom_level }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info text-center">
+        No approved questions found.
+    </div>
+{% endif %}
+{% endblock %}

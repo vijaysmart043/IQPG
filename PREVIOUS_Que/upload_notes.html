@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Notes for AI Generation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm upload-card">
+        <div class="card-body p-4">
+            <h2 class="card-title text-center mb-4">
+                <i class="bi bi-robot"></i> AI Question Generation
+            </h2>
+            <p class="text-center text-muted mb-4">
+                Select a subject and upload the corresponding PDF notes. The AI will analyze the content and generate questions for your review.
+            </p>
+
+            <form action="{{ url_for('uploader.upload_notes') }}" method="POST" enctype="multipart/form-data" id="upload-form">
+                <div class="mb-3">
+                    <label for="subject_id" class="form-label">1. Select Subject</label>
+                    <select class="form-select" id="subject_id" name="subject_id" required>
+                        <option value="" disabled selected>-- Choose a Subject --</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.branch_name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes_file" class="form-label">2. Upload PDF Notes or Syllabus</label>
+                    <input class="form-control" type="file" id="notes_file" name="notes_file" accept=".pdf" required>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="is_syllabus" id="is_syllabus" value="true">
+                    <label class="form-check-label" for="is_syllabus">
+                        This PDF is a syllabus (check this for better question generation from syllabus content).
+                    </label>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-upload"></i> Upload & Start Generation
+                    </button>
+                </div>
+            </form>
+
+            <div id="loading-spinner" class="text-center mt-4 d-none">
+                <div class="loader mx-auto"></div>
+                <p class="mt-3 text-primary"><strong>Processing...</strong> Please wait, this may take a few minutes.</p>
+                <p class="text-muted">The AI is reading the PDF and generating questions.</p>
+            </div>
+        </div>
+    </div>
+
+    {% if generated_questions %}
+    <div class="card shadow-sm mt-4 generated-card">
+        <div class="card-body p-4">
+            <h3 class="card-title text-center mb-4">
+                <i class="bi bi-check-circle-fill text-success"></i> Generated Questions
+            </h3>
+            <p class="text-center text-muted mb-4">
+                Review the AI-generated questions below. Questions are also saved to the staging area for further review.
+            </p>
+
+            {% for question in generated_questions %}
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-question-circle"></i> Question {{ loop.index }}</span>
+                    <span class="badge bg-light text-dark">{{ question.bloom_level|upper }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Generated Question:</strong></p>
+                    <p class="mb-3 question-text">{{ question.question_text }}</p>
+                    <p class="mb-1"><strong>Bloom Level:</strong> {{ question.bloom_level }}</p>
+                    <p class="mb-3"><strong>Source Type:</strong> {{ question.source_type }}</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <form action="{{ url_for('questions.save_generated_question') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="question_text" value="{{ question.question_text }}">
+                            <input type="hidden" name="bloom_level" value="{{ question.bloom_level }}">
+                            <input type="hidden" name="source_type" value="{{ question.source_type }}">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle"></i> Approve
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('questions.staging') }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-right-circle"></i> Go to Staging Area for Full Review
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function() {
+            const spinner = document.getElementById('loading-spinner');
+            if (spinner) {
+                spinner.classList.remove('d-none');
+            }
+        });
+    }
+</script>
+{% endblock %}

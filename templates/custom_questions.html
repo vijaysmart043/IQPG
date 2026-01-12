@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Add Custom Question{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h3 class="mb-3">Add Custom Question</h3>
+        <form method="POST" action="{{ url_for('questions.custom_question') }}">
+            <div class="mb-3">
+                <label for="subject_id" class="form-label">Subject</label>
+                <select class="form-select" id="subject_id" name="subject_id" required>
+                    {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.branch_name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="unit_number" class="form-label">Unit</label>
+                    <input type="number" min="1" max="5" class="form-control" id="unit_number" name="unit_number" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="bloom_level" class="form-label">Bloom Level</label>
+                    <select class="form-select" id="bloom_level" name="bloom_level">
+                        <option>L1</option>
+                        <option>L2</option>
+                        <option>L3</option>
+                        <option>L4</option>
+                        <option>L5</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="hardness" class="form-label">Hardness</label>
+                    <select class="form-select" id="hardness" name="hardness">
+                        <option>easy</option>
+                        <option selected>medium</option>
+                        <option>hard</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="question_text" class="form-label">Question Text</label>
+                <textarea class="form-control" id="question_text" name="question_text" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

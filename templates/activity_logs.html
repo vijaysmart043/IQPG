@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Logs{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0"><i class="bi bi-activity me-2"></i>Activity Logs</h3>
+    <span class="text-muted">Showing latest {{ logs|length }} entries</span>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 log-table">
+                <thead>
+                    <tr>
+                        <th style="width: 12rem;">Timestamp (UTC)</th>
+                        <th style="width: 12rem;">User</th>
+                        <th style="width: 12rem;">Action</th>
+                        <th>Metadata</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if logs %}
+                        {% for log in logs %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ log.timestamp }}</span></td>
+                            <td><code>{{ log.user_id }}</code></td>
+                            <td><span class="badge bg-info text-dark">{{ log.action }}</span></td>
+                            <td>
+                                {% if log.metadata %}
+                                    <code>{{ log.metadata }}</code>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No logs to display.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+    .log-table td, .log-table th { vertical-align: middle; }
+    code { white-space: pre-wrap; }
+    .table {
+        --bs-table-bg: transparent;
+        --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+        --bs-table-hover-bg: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+</style>
+{% endblock %}
